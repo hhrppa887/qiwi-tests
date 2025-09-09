@@ -1,0 +1,256 @@
+{
+	"info": {
+		"_postman_id": "46707915-adc8ce53-5213-4004-b7eb-98ad00fca505",
+		"name": "qiwi testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Получение всех платежей",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "1b5d9027-2e85-430b-8eea-5d2bf9d70839",
+						"exec": [
+							"pm.test(\"Статус ответа 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"id": "46707915-73b0aa5b-eda1-4d53-bd4b-08f21ae62cc9",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{site}}partner/payout/v1/agents/{{agentId}}/points/{{pointId}}/payments",
+					"host": [
+						"{{site}}partner"
+					],
+					"path": [
+						"payout",
+						"v1",
+						"agents",
+						"{{agentId}}",
+						"points",
+						"{{pointId}}",
+						"payments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Запрос баланса",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "9e6f1a0c-af9a-47e0-932b-2a13fb531fec",
+						"exec": [
+							"pm.test(\"Статус ответа 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Баланс больше 0\", function () {\r",
+							"    const json = pm.response.json();\r",
+							"    const balanceValue = parseFloat(json.balance.value);\r",
+							"    pm.expect(balanceValue).to.be.above(0);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"id": "46707915-9ea3e728-45dc-4b83-b33c-d139b94a87ae",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{site}}partner/payout/v1/agents/{{agentId}}/points/{{pointId}}/balance",
+					"host": [
+						"{{site}}partner"
+					],
+					"path": [
+						"payout",
+						"v1",
+						"agents",
+						"{{agentId}}",
+						"points",
+						"{{pointId}}",
+						"balance"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Создание платежа на 1 рубль",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "15d2c1bf-f4da-4ef7-856b-179e42168351",
+						"exec": [
+							"pm.test(\"Статус ответа 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Сумма платежа = 1\", function () {\r",
+							"    pm.expect(json.amount.value).to.eql(\"1.00\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Валюта = RUB\", function () {\r",
+							"    pm.expect(json.amount.currency).to.eql(\"RUB\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Есть paymentId для дальнейших запросов\", function () {\r",
+							"    pm.expect(json).to.have.property(\"paymentId\");\r",
+							"});\r",
+							"\r",
+							"const json = pm.response.json();\r",
+							"pm.collectionVariables.set(\"paymentId\", json.paymentId);\r",
+							"pm.collectionVariables.set(\"amountValue\", json.amount.value);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"id": "46707915-5c8f6369-bcdb-4ce0-9981-49456eaa824e",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n \"recipientDetails\": {\r\n    \"providerCode\": \"bank-card-russia\",\r\n    \"fields\": {\r\n       \"pan\": \"123456******4321\"\r\n    }\r\n  },\r\n  \"amount\": {\r\n    \"value\": \"1.00\",\r\n    \"currency\": \"RUB\"\r\n  },\r\n  \"source\": {\r\n    \"paymentType\": \"NO_EXTRA_CHARGE\",\r\n    \"paymentToolType\": \"BANK_ACCOUNT\",\r\n    \"paymentTerminalType\": \"INTERNET_BANKING\"\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{site}}partner/payout/v1/agents/{{agentId}}/points/{{pointId}}/payments/{{paymentId}}",
+					"host": [
+						"{{site}}partner"
+					],
+					"path": [
+						"payout",
+						"v1",
+						"agents",
+						"{{agentId}}",
+						"points",
+						"{{pointId}}",
+						"payments",
+						"{{paymentId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Исполнение платежа",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "923b7d6b-c083-4dbd-a9bc-fbd02da80529",
+						"exec": [
+							"pm.test(\"Статус ответа 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"paymentId совпадает\", function () {\r",
+							"    pm.expect(json.paymentId).to.eql(pm.environment.get(\"paymentId\"));\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Статус платежа есть\", function () {\r",
+							"    pm.expect(json).to.have.property(\"status\");\r",
+							"    pm.expect(json.status.value).to.be.oneOf([\"IN_PROGRESS\", \"SUCCESS\", \"FAILED\"]);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Валюта платежа RUB\", function () {\r",
+							"    pm.expect(json.amount.currency).to.eql(\"RUB\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"id": "46707915-39a675fc-6143-43f7-be36-b62d80b820f6",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"paymentId\": \"{{paymentId}}\",\r\n  \"creationDateTime\": \"{{$isoTimestamp}}\",\r\n  \"expirationDatetime\": \"{{$isoTimestamp}}\",\r\n  \"status\": {\r\n    \"value\": \"IN_PROGRESS\",\r\n    \"changedDateTime\": \"{{$isoTimestamp}}\"\r\n  },\r\n  \"recipientDetails\": {\r\n    \"providerCode\": \"qiwi-wallet\",\r\n    \"fields\": {\r\n      \"account\": \"79123456789\"\r\n    }\r\n  },\r\n  \"amount\": {\r\n    \"value\": \"{{amountValue}}\",\r\n    \"currency\": \"RUB\"\r\n  },\r\n  \"commission\": {\r\n    \"value\": \"2.00\",\r\n    \"currency\": \"RUB\"\r\n  },\r\n  \"customer\": {\r\n    \"account\": \"#12345\",\r\n    \"email\": \"usermail@mail.mail\",\r\n    \"phone\": \"9123456789\"\r\n  },\r\n  \"source\": {\r\n    \"paymentType\": \"WITH_EXTRA_CHARGE\",\r\n    \"paymentToolType\": \"CASH\",\r\n    \"paymentTerminalType\": \"ATM_CASH_IN\",\r\n    \"paymentDate\": \"2018-11-27T14:06:17.109+03:00\",\r\n    \"extraCharge\": {\r\n      \"value\": \"2.00\",\r\n      \"currency\": \"RUB\"\r\n    }\r\n  },\r\n  \"customFields\": {\r\n    \"cashier\": \"Иванов\",\r\n    \"something\": \"Что-то нужное контрагенту\",\r\n    \"something-other\": \"Еще что-то нужное контрагенту\"\r\n  },\r\n  \"callbackUrl\": \"https://domain/path\",\r\n  \"IdentificationType\": \"NONE\"\r\n  \"billingDetails\": {\r\n    \"transactionId\":\"1000200300\",\r\n    \"rrn\": \"abcDE123\"\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{site}}partner/payout/v1/agents/{{agentId}}/points/{{pointId}}/payments/{{paymentId}}/execute",
+					"host": [
+						"{{site}}partner"
+					],
+					"path": [
+						"payout",
+						"v1",
+						"agents",
+						"{{agentId}}",
+						"points",
+						"{{pointId}}",
+						"payments",
+						"{{paymentId}}",
+						"execute"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "site",
+			"value": "https://api-test.qiwi.com/",
+			"type": "default"
+		},
+		{
+			"key": "agentId",
+			"value": "hhrppa",
+			"type": "default"
+		},
+		{
+			"key": "pointId",
+			"value": "0001",
+			"type": "default"
+		},
+		{
+			"key": "paymentId",
+			"value": "999",
+			"type": "default"
+		}
+	]
+}
